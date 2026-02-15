@@ -99,4 +99,56 @@ function getLocation() {
     }
 }
 
+async function addCity() {
+    const cityName = cityInput.value.trim();
+    
+    if (!cityName) {
+        cityError.textContent = 'Введите название города';
+        return;
+    }
+    
+    cityError.textContent = '';
+    cityInput.disabled = true;
+    addCityBtn.disabled = true;
+    
+    const data = await fetchWeather(cityName);
+    
+    cityInput.disabled = false;
+    addCityBtn.disabled = false;
+    
+    if (!data) {
+        cityError.textContent = 'Город не найден';
+        return;
+    }
+    
+    if (!currentCity) {
+        currentCity = cityName;
+        locationTitle.textContent = cityName;
+        displayWeather(data, currentWeatherDiv);
+        addCityForm.style.display = 'none';
+        geoDeniedMessage.style.display = 'none';
+    } else {
+        if (additionalCities.length >= 2) {
+            cityError.textContent = 'Можно добавить только 2 дополнительных города';
+            return;
+        }
+        
+        additionalCities.push(cityName);
+        const cityCard = document.createElement('div');
+        cityCard.className = 'weather-card';
+        cityCard.id = `city-${cityName}`;
+        additionalCitiesDiv.appendChild(cityCard);
+        displayWeather(data, cityCard);
+        cityInput.value = '';
+    }
+}
+
+addCityBtn.addEventListener('click', addCity);
+
+cityInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        addCity();
+    }
+});
+
 getLocation();
