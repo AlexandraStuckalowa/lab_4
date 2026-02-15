@@ -8,32 +8,44 @@
 </head>
 <body>
     <div class="container">
-        <h1>Погода</h1>
+        <button class="back-btn" id="backBtn" style="display: none;">← Назад</button>
 
-        <button id="refreshBtn">Обновить</button>
+        <div class="main-view active" id="mainView">
+            <h1>Погода</h1>
 
-        <div class="location-section">
-            <h2 id="locationTitle">Текущее местоположение</h2>
-            <div id="currentWeather" class="weather-card">
-                <p>Загрузка...</p>
+            <button id="refreshBtn">Обновить</button>
+
+            <div class="location-section">
+                <h2 id="locationTitle">Текущее местоположение</h2>
+                <div id="currentWeather" class="weather-card">
+                    <p>Загрузка...</p>
+                </div>
+            </div>
+
+            <div class="cities-section">
+                <h2>Другие города</h2>
+                <div id="additionalCities" class="cities-container">
+                </div>
+            </div>
+
+            <div id="addCityForm" class="add-city-form" style="display: none;">
+                <h3>Добавить город</h3>
+                <input type="text" id="cityInput" placeholder="Введите название города">
+                <button id="addCityBtn">Добавить</button>
+                <div id="cityError" class="error-message"></div>
+            </div>
+
+            <div id="geoDeniedMessage" style="display: none;">
+                <p>Доступ к геопозиции запрещен. Добавьте город вручную.</p>
             </div>
         </div>
 
-        <div class="cities-section">
-            <h2>Другие города</h2>
-            <div id="additionalCities" class="cities-container">
+        <div class="city-view" id="cityView">
+            <div class="city-header">
+                <h2 id="selectedCityTitle"></h2>
             </div>
-        </div>
-
-        <div id="addCityForm" class="add-city-form" style="display: none;">
-            <h3>Добавить город</h3>
-            <input type="text" id="cityInput" placeholder="Введите название города">
-            <button id="addCityBtn">Добавить</button>
-            <div id="cityError" class="error-message"></div>
-        </div>
-
-        <div id="geoDeniedMessage" style="display: none;">
-            <p>Доступ к геопозиции запрещен. Добавьте город вручную.</p>
+            <div id="selectedCityWeather" class="weather-card"></div>
+            <button id="refreshSelectedBtn" class="refresh-btn">Обновить</button>
         </div>
     </div>
 
