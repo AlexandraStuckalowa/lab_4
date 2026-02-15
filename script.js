@@ -37,10 +37,6 @@ const popularCities = [
     'Токио'
 ];
 
-let datalist = document.createElement('datalist');
-datalist.id = 'cities-datalist';
-document.body.appendChild(datalist);
-
 function saveToLocalStorage() {
     const data = {
         currentCity: currentCity,
@@ -181,6 +177,90 @@ async function loadAllCities() {
     geoDeniedMessage.style.display = 'none';
 }
 
+let autocompleteList = null;
+
+function createAutocompleteList() {
+    if (autocompleteList) {
+        autocompleteList.remove();
+    }
+    
+    autocompleteList = document.createElement('div');
+    autocompleteList.className = 'autocomplete-list';
+    
+    const rect = cityInput.getBoundingClientRect();
+    autocompleteList.style.width = rect.width + 'px';
+    autocompleteList.style.top = (rect.bottom + window.scrollY) + 'px';
+    autocompleteList.style.left = (rect.left + window.scrollX) + 'px';
+    
+    document.body.appendChild(autocompleteList);
+}
+
+function updateAutocompleteList(filter) {
+    if (!filter) {
+        if (autocompleteList) {
+            autocompleteList.remove();
+            autocompleteList = null;
+        }
+        return;
+    }
+    
+    const filtered = popularCities.filter(city => 
+        city.toLowerCase().startsWith(filter.toLowerCase())
+    );
+    
+    if (filtered.length === 0) {
+        if (autocompleteList) {
+            autocompleteList.remove();
+            autocompleteList = null;
+        }
+        return;
+    }
+    
+    if (!autocompleteList) {
+        createAutocompleteList();
+    } else {
+        autocompleteList.innerHTML = '';
+    }
+    
+    filtered.forEach(city => {
+        const item = document.createElement('div');
+        item.className = 'autocomplete-item';
+        item.textContent = city;
+        
+        item.addEventListener('click', () => {
+            cityInput.value = city;
+            autocompleteList.remove();
+            autocompleteList = null;
+            cityError.textContent = '';
+        });
+        
+        autocompleteList.appendChild(item);
+    });
+}
+
+cityInput.addEventListener('input', (e) => {
+    updateAutocompleteList(e.target.value);
+});
+
+cityInput.addEventListener('blur', () => {
+    setTimeout(() => {
+        if (autocompleteList) {
+            autocompleteList.remove();
+            autocompleteList = null;
+        }
+    }, 200);
+});
+
+cityInput.addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        addCity();
+        if (autocompleteList) {
+            autocompleteList.remove();
+            autocompleteList = null;
+        }
+    }
+});
+
 async function addCity() {
     const cityName = cityInput.value.trim();
     
@@ -199,18 +279,18 @@ async function addCity() {
     addCityBtn.disabled = false;
     
     if (!data) {
-    cityError.textContent = 'Город не найден. Выберите город из списка';
-    return;
-}
+        cityError.textContent = 'Город не найден. Выберите город из списка';
+        return;
+    }
 
-const isValidCity = popularCities.some(city => 
-    city.toLowerCase() === cityName.toLowerCase()
-);
+    const isValidCity = popularCities.some(city => 
+        city.toLowerCase() === cityName.toLowerCase()
+    );
 
-if (!isValidCity) {
-    cityError.textContent = 'Пожалуйста, выберите город из выпадающего списка';
-    return;
-}
+    if (!isValidCity) {
+        cityError.textContent = 'Пожалуйста, выберите город из выпадающего списка';
+        return;
+    }
     
     if (!currentCity) {
         currentCity = cityName;
@@ -237,39 +317,6 @@ if (!isValidCity) {
 }
 
 addCityBtn.addEventListener('click', addCity);
-
-cityInput.setAttribute('list', 'cities-datalist');
-
-function updateDatalist(filter) {
-    datalist.innerHTML = '';
-    const filtered = popularCities.filter(city => 
-        city.toLowerCase().includes(filter.toLowerCase())
-    );
-    
-    filtered.forEach(city => {
-        const option = document.createElement('option');
-        option.value = city;
-        datalist.appendChild(option);
-    });
-}
-
-cityInput.addEventListener('input', (e) => {
-    if (e.target.value.length > 0) {
-        updateDatalist(e.target.value);
-    }
-});
-
-cityInput.addEventListener('blur', () => {
-    setTimeout(() => {
-        datalist.innerHTML = '';
-    }, 200);
-});
-
-cityInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-        addCity();
-    }
-});
 
 async function refreshAllWeather() {
     currentWeatherDiv.innerHTML = '<p>Обновление...</p>';
