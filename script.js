@@ -220,6 +220,11 @@ function displayWeather(data, container) {
     container.weatherData = data;
 }
 
+function markPrimaryCard() {
+  currentWeatherDiv.dataset.primary = 'true';
+  currentWeatherDiv.dataset.removable = 'true';
+}
+
 function getLocation() {
     const hasSavedData = loadFromLocalStorage();
     
@@ -243,8 +248,7 @@ function getLocation() {
                     const data = await response.json();
                     currentCity = data.city.name;
                     locationTitle.textContent = 'Текущее местоположение';
-                    currentWeatherDiv.dataset.primary = 'true';
-                    currentWeatherDiv.dataset.removable = 'true';
+                    markPrimaryCard();
                     displayWeather(data, currentWeatherDiv);
                     addCityForm.style.display = 'block';  
                     geoDeniedMessage.style.display = 'none';
@@ -303,8 +307,7 @@ async function loadAllCities() {
         const data = await fetchWeather(currentCity);
         if (data) {
             locationTitle.textContent = currentCity;
-            currentWeatherDiv.dataset.primary = 'true';
-            currentWeatherDiv.dataset.removable = 'true';
+            markPrimaryCard();
             displayWeather(data, currentWeatherDiv);
         }
     }
@@ -478,6 +481,7 @@ async function addCity() {
   if (!currentCity) {
     currentCity = canonicalCity;
     locationTitle.textContent = canonicalCity;
+    markPrimaryCard();
     displayWeather(data, currentWeatherDiv);
     saveToLocalStorage();
     addCityForm.style.display = 'block';
