@@ -14,6 +14,25 @@ const geoDeniedMessage = document.getElementById('geoDeniedMessage');
 let currentCity = null;
 let additionalCities = [];
 
+function saveToLocalStorage() {
+    const data = {
+        currentCity: currentCity,
+        additionalCities: additionalCities
+    };
+    localStorage.setItem('weatherAppData', JSON.stringify(data));
+}
+
+function loadFromLocalStorage() {
+    const saved = localStorage.getItem('weatherAppData');
+    if (saved) {
+        const data = JSON.parse(saved);
+        currentCity = data.currentCity;
+        additionalCities = data.additionalCities || [];
+        return true;
+    }
+    return false;
+}
+
 async function fetchWeather(city) {
     try {
         const response = await fetch(
@@ -125,6 +144,7 @@ async function addCity() {
         currentCity = cityName;
         locationTitle.textContent = cityName;
         displayWeather(data, currentWeatherDiv);
+        saveToLocalStorage();
         addCityForm.style.display = 'none';
         geoDeniedMessage.style.display = 'none';
     } else {
@@ -139,6 +159,7 @@ async function addCity() {
         cityCard.id = `city-${cityName}`;
         additionalCitiesDiv.appendChild(cityCard);
         displayWeather(data, cityCard);
+        saveToLocalStorage();
         cityInput.value = '';
     }
 }
@@ -172,6 +193,8 @@ async function refreshAllWeather() {
             displayWeather(data, card);
         }
     }
+
+    saveToLocalStorage();
 }
 
 refreshBtn.addEventListener('click', refreshAllWeather);
