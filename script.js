@@ -62,3 +62,41 @@ function displayWeather(data, container) {
     container.innerHTML = html;
 }
 
+function getLocation() {
+    currentWeatherDiv.innerHTML = '<p>Запрашиваем геолокацию...</p>';
+    
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+            async position => {
+                const { latitude, longitude } = position.coords;
+                currentWeatherDiv.innerHTML = '<p>Загружаем погоду...</p>';
+                
+                try {
+                    const response = await fetch(
+                        `${BASE_URL}/forecast?lat=${latitude}&lon=${longitude}&units=metric&lang=ru&appid=${API_KEY}`
+                    );
+                    const data = await response.json();
+                    currentCity = data.city.name;
+                    locationTitle.textContent = 'Текущее местоположение';
+                    displayWeather(data, currentWeatherDiv);
+                    addCityForm.style.display = 'none';
+                    geoDeniedMessage.style.display = 'none';
+                } catch (error) {
+                    currentWeatherDiv.innerHTML = '<p>Ошибка загрузки погоды</p>';
+                }
+            },
+            error => {
+                console.log('Геолокация отклонена:', error);
+                currentWeatherDiv.innerHTML = '<p>Геолокация недоступна</p>';
+                geoDeniedMessage.style.display = 'block';
+                addCityForm.style.display = 'block';
+            }
+        );
+    } else {
+        currentWeatherDiv.innerHTML = '<p>Геолокация не поддерживается</p>';
+        geoDeniedMessage.style.display = 'block';
+        addCityForm.style.display = 'block';
+    }
+}
+
+getLocation();
