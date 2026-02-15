@@ -5,6 +5,7 @@ const locationTitle = document.getElementById('locationTitle');
 const currentWeatherDiv = document.getElementById('currentWeather');
 const additionalCitiesDiv = document.getElementById('additionalCities');
 const refreshBtn = document.getElementById('refreshBtn');
+const resetBtn = document.getElementById('resetBtn');
 const addCityForm = document.getElementById('addCityForm');
 const cityInput = document.getElementById('cityInput');
 const addCityBtn = document.getElementById('addCityBtn');
@@ -164,7 +165,7 @@ backBtn.addEventListener('click', showMainView);
 async function fetchWeather(city) {
     try {
         const response = await fetch(
-            `${BASE_URL}/forecast?q=${city}&units=metric&lang=ru&appid=${API_KEY}`
+            `${BASE_URL}/forecast?q=${encodeURIComponent(city)}&units=metric&lang=ru&appid=${API_KEY}`
         );
         
         if (!response.ok) {
@@ -188,7 +189,16 @@ function displayWeather(data, container) {
     const cityName = data.city.name;
     const forecasts = data.list.filter(item => item.dt_txt.includes('12:00:00')).slice(0, 3);
     
-    let html = `<h3 class="city-clickable" data-city="${cityName}">${cityName}</h3>`;
+    let html = `
+  <div class="card-header">
+    <h3 class="city-clickable" data-city="${cityName}">${cityName}</h3>
+    ${container.dataset.removable === 'true'
+        ? `<button class="remove-city" data-city="${cityName}" type="button">
+            ${container.dataset.primary === 'true' ? 'Сменить' : 'Удалить'}
+     </button>`
+        : ``}
+  </div>
+`;
     
     forecasts.forEach(day => {
         const date = new Date(day.dt * 1000);
@@ -233,6 +243,8 @@ function getLocation() {
                     const data = await response.json();
                     currentCity = data.city.name;
                     locationTitle.textContent = 'Текущее местоположение';
+                    currentWeatherDiv.dataset.primary = 'true';
+                    currentWeatherDiv.dataset.removable = 'true';
                     displayWeather(data, currentWeatherDiv);
                     addCityForm.style.display = 'block';  
                     geoDeniedMessage.style.display = 'none';
@@ -291,6 +303,8 @@ async function loadAllCities() {
         const data = await fetchWeather(currentCity);
         if (data) {
             locationTitle.textContent = currentCity;
+            currentWeatherDiv.dataset.primary = 'true';
+            currentWeatherDiv.dataset.removable = 'true';
             displayWeather(data, currentWeatherDiv);
         }
     }
@@ -300,6 +314,7 @@ async function loadAllCities() {
         const cityCard = document.createElement('div');
         cityCard.className = 'weather-card';
         cityCard.id = `city-${city}`;
+        cityCard.dataset.removable = 'true';
         additionalCitiesDiv.appendChild(cityCard);
         cityCard.innerHTML = '<p>Загрузка...</p>';
         
@@ -314,6 +329,39 @@ async function loadAllCities() {
 }
 
 let autocompleteList = null;
+
+document.addEventListener('click', (e) => {
+  if (!e.target.classList.contains('remove-city')) return;
+
+  const cityName = e.target.dataset.city;
+  const card = e.target.closest('.weather-card');
+  const isPrimary = card && card.dataset.primary === 'true';
+
+  if (isPrimary) {
+
+    localStorage.removeItem('weatherAppData');
+    currentCity = null;
+    additionalCities = [];
+    selectedCity = null;
+
+    additionalCitiesDiv.innerHTML = '';
+    showMainView();
+
+    locationTitle.textContent = 'Текущее местоположение';
+    currentWeatherDiv.innerHTML = '<p>Запрашиваем геолокацию...</p>';
+
+    addCityForm.style.display = 'block';
+    geoDeniedMessage.style.display = 'none';
+
+    getLocation();
+    return;
+  }
+
+  additionalCities = additionalCities.filter(c => c !== cityName);
+  saveToLocalStorage();
+  loadAllCities();
+  showMainView();
+});
 
 function createAutocompleteList() {
     if (autocompleteList) {
@@ -432,7 +480,7 @@ async function addCity() {
     locationTitle.textContent = canonicalCity;
     displayWeather(data, currentWeatherDiv);
     saveToLocalStorage();
-    addCityForm.style.display = 'none';
+    addCityForm.style.display = 'block';
     geoDeniedMessage.style.display = 'none';
   } else {
     if (additionalCities.length >= 2) {
@@ -440,7 +488,7 @@ async function addCity() {
       return;
     }
 
-    // защита от дублей
+
     const all = [currentCity, ...additionalCities].map(x => x.toLowerCase());
     if (all.includes(canonicalCity.toLowerCase())) {
       cityError.textContent = 'Этот город уже добавлен';
@@ -452,6 +500,7 @@ async function addCity() {
     const cityCard = document.createElement('div');
     cityCard.className = 'weather-card';
     cityCard.id = `city-${canonicalCity}`;
+    cityCard.dataset.removable = 'true';
     additionalCitiesDiv.appendChild(cityCard);
 
     displayWeather(data, cityCard);
@@ -490,6 +539,25 @@ async function refreshAllWeather() {
 
   saveToLocalStorage();
 }
+
+resetBtn.addEventListener('click', () => {
+    localStorage.removeItem('weatherAppData');
+
+    currentCity = null;
+    additionalCities = [];
+    selectedCity = null;
+
+    additionalCitiesDiv.innerHTML = '';
+    showMainView();
+
+    locationTitle.textContent = 'Текущее местоположение';
+    currentWeatherDiv.innerHTML = '<p>Запрашиваем геолокацию...</p>';
+
+    addCityForm.style.display = 'block';
+    geoDeniedMessage.style.display = 'none';
+
+    getLocation();
+});
 
 refreshBtn.addEventListener('click', refreshAllWeather);
 
