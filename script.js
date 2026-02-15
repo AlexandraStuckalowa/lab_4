@@ -31,3 +31,34 @@ async function fetchWeather(city) {
         return null;
     }
 }
+
+function displayWeather(data, container) {
+    if (!data || !data.list) {
+        container.innerHTML = '<p>Ошибка загрузки данных</p>';
+        return;
+    }
+
+    const cityName = data.city.name;
+    const forecasts = data.list.filter(item => item.dt_txt.includes('12:00:00')).slice(0, 3);
+    
+    let html = `<h3>${cityName}</h3>`;
+    
+    forecasts.forEach(day => {
+        const date = new Date(day.dt * 1000);
+        const dayName = date.toLocaleDateString('ru-RU', { weekday: 'short' });
+        const temp = Math.round(day.main.temp);
+        const description = day.weather[0].description;
+        const icon = day.weather[0].icon;
+        
+        html += `
+            <div class="day-weather">
+                <p><strong>${dayName}</strong></p>
+                <p>${temp}°C</p>
+                <p>${description}</p>
+            </div>
+        `;
+    });
+    
+    container.innerHTML = html;
+}
+
