@@ -151,4 +151,29 @@ cityInput.addEventListener('keypress', (e) => {
     }
 });
 
+async function refreshAllWeather() {
+    currentWeatherDiv.innerHTML = '<p>Обновление...</p>';
+    
+    if (currentCity) {
+        const data = await fetchWeather(currentCity);
+        if (data) {
+            displayWeather(data, currentWeatherDiv);
+        }
+    }
+    
+    const cityCards = additionalCitiesDiv.children;
+    for (let i = 0; i < cityCards.length; i++) {
+        const card = cityCards[i];
+        const cityName = card.id.replace('city-', '');
+        card.innerHTML = '<p>Обновление...</p>';
+        
+        const data = await fetchWeather(cityName);
+        if (data) {
+            displayWeather(data, card);
+        }
+    }
+}
+
+refreshBtn.addEventListener('click', refreshAllWeather);
+
 getLocation();
