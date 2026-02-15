@@ -13,3 +13,21 @@ const geoDeniedMessage = document.getElementById('geoDeniedMessage');
 
 let currentCity = null;
 let additionalCities = [];
+
+async function fetchWeather(city) {
+    try {
+        const response = await fetch(
+            `${BASE_URL}/forecast?q=${city}&units=metric&lang=ru&appid=${API_KEY}`
+        );
+        
+        if (!response.ok) {
+            throw new Error('Город не найден');
+        }
+        
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Ошибка:', error);
+        return null;
+    }
+}
