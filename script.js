@@ -189,34 +189,55 @@ function displayWeather(data, container) {
     const cityName = data.city.name;
     const forecasts = data.list.filter(item => item.dt_txt.includes('12:00:00')).slice(0, 3);
     
-    let html = `
-  <div class="card-header">
-    <h3 class="city-clickable" data-city="${cityName}">${cityName}</h3>
-    ${container.dataset.removable === 'true'
-        ? `<button class="remove-city" data-city="${cityName}" type="button">
-            ${container.dataset.primary === 'true' ? 'Сменить' : 'Удалить'}
-     </button>`
-        : ``}
-  </div>
-`;
+    container.innerHTML = '';
+    
+    const cardHeader = document.createElement('div');
+    cardHeader.className = 'card-header';
+    
+    const cityTitle = document.createElement('h3');
+    cityTitle.className = 'city-clickable';
+    cityTitle.dataset.city = cityName;
+    cityTitle.textContent = cityName;
+    cardHeader.appendChild(cityTitle);
+    
+    if (container.dataset.removable === 'true') {
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'remove-city';
+        removeBtn.dataset.city = cityName;
+        removeBtn.type = 'button';
+        removeBtn.textContent = container.dataset.primary === 'true' ? 'Сменить' : 'Удалить';
+        cardHeader.appendChild(removeBtn);
+    }
+    
+    container.appendChild(cardHeader);
     
     forecasts.forEach(day => {
         const date = new Date(day.dt * 1000);
         const dayName = date.toLocaleDateString('ru-RU', { weekday: 'short' });
         const temp = Math.round(day.main.temp);
         const description = day.weather[0].description;
-        const icon = day.weather[0].icon;
         
-        html += `
-            <div class="day-weather">
-                <p><strong>${dayName}</strong></p>
-                <p>${temp}°C</p>
-                <p>${description}</p>
-            </div>
-        `;
+        const dayWeather = document.createElement('div');
+        dayWeather.className = 'day-weather';
+        
+        const dayNameEl = document.createElement('p');
+        const strong = document.createElement('strong');
+        strong.textContent = dayName;
+        dayNameEl.appendChild(strong);
+        
+        const tempEl = document.createElement('p');
+        tempEl.textContent = temp + '°C';
+        
+        const descEl = document.createElement('p');
+        descEl.textContent = description;
+        
+        dayWeather.appendChild(dayNameEl);
+        dayWeather.appendChild(tempEl);
+        dayWeather.appendChild(descEl);
+        
+        container.appendChild(dayWeather);
     });
     
-    container.innerHTML = html;
     container.weatherData = data;
 }
 
